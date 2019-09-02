@@ -1,0 +1,22 @@
+sudo: required
+services:
+  -docker
+
+before_install:
+  - docker build -t shpiglify/react-test -f ./client/Dockerfile.dev ./client
+
+script: 
+  - docker run shpiglify/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t shpiglify/multi-client ./client
+  - docker build -t shpiglify/multi-nginx ./nginx
+  - docker build -t shpiglify/multi-server ./server
+  - docker build -t shpiglify/multi-worker ./worker
+  #log in to the docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #take those images and push them to docker hub
+  - docker push shpiglify/multi-client
+  - docker push shpiglify/multi-nginx
+  - docker push shpiglify/multi-server
+  - docker push shpiglify/multi-worker
